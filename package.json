@@ -1,0 +1,13 @@
+{
+  "name": "cse160-asgn5",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "parcel serve public/index.html"
+  },
+  "dependencies": {
+    "three": "^0.152.2"
+  },
+  "devDependencies": {
+    "parcel": "^2.13.3"
+  }
+}
