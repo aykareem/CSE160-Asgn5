@@ -159,7 +159,6 @@ for (let i = 0; i < 4; i++) {
 // 5) 20 Dancing Objects (Animate them moving around)
 // -------------------------------------------------- //
 const dancingObjects = [];
-
 function createDancingObjects() {
   const geometryOptions = [
     () => new THREE.BoxGeometry(0.6, 0.6, 0.6),
@@ -168,7 +167,6 @@ function createDancingObjects() {
     () => new THREE.CylinderGeometry(0.3, 0.3, 0.8, 16),
     () => new THREE.TorusGeometry(0.4, 0.15, 16, 32)
   ];
-
   for (let i = 0; i < 20; i++) {
     const geoFunc = geometryOptions[Math.floor(Math.random() * geometryOptions.length)];
     const geometry = geoFunc();

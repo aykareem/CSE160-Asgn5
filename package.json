@@ -1,13 +1,16 @@
 {
-  "name": "cse160-asgn5",
-  "version": "1.0.0",
-  "scripts": {
-    "start": "parcel serve public/index.html"
-  },
-  "dependencies": {
-    "three": "^0.152.2"
-  },
-  "devDependencies": {
-    "parcel": "^2.13.3"
-  }
+    "name": "cse160-asgn5",
+    "version": "1.0.0",
+    "scripts": {
+        "start": "parcel serve index.html",
+        "build": "parcel build index.html --public-url ./",
+        "deploy": "gh-pages -d dist"
+    },
+    "devDependencies": {
+        "gh-pages": "^5.0.0",
+        "parcel": "^2.13.3"
+    },
+    "dependencies": {
+        "three": "^0.174.0"
+    }
 }

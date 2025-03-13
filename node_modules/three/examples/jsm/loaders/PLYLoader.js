@@ -3,7 +3,8 @@ import {
 	FileLoader,
 	Float32BufferAttribute,
 	Loader,
-	Color
+	Color,
+	SRGBColorSpace
 } from 'three';
 
 /**
@@ -104,17 +105,15 @@ class PLYLoader extends Loader {
 
 	parse( data ) {
 
-		function parseHeader( data ) {
+		function parseHeader( data, headerLength = 0 ) {
 
 			const patternHeader = /^ply([\s\S]*)end_header(\r\n|\r|\n)/;
 			let headerText = '';
-			let headerLength = 0;
 			const result = patternHeader.exec( data );
 
 			if ( result !== null ) {
 
 				headerText = result[ 1 ];
-				headerLength = new Blob( [ result[ 0 ] ] ).size;
 
 			}
 
@@ -128,19 +127,19 @@ class PLYLoader extends Loader {
 			const lines = headerText.split( /\r\n|\r|\n/ );
 			let currentElement;
 
-			function make_ply_element_property( propertValues, propertyNameMapping ) {
+			function make_ply_element_property( propertyValues, propertyNameMapping ) {
 
-				const property = { type: propertValues[ 0 ] };
+				const property = { type: propertyValues[ 0 ] };
 
 				if ( property.type === 'list' ) {
 
-					property.name = propertValues[ 3 ];
-					property.countType = propertValues[ 1 ];
-					property.itemType = propertValues[ 2 ];
+					property.name = propertyValues[ 3 ];
+					property.countType = propertyValues[ 1 ];
+					property.itemType = propertyValues[ 2 ];
 
 				} else {
 
-					property.name = propertValues[ 1 ];
+					property.name = propertyValues[ 1 ];
 
 				}
 
@@ -287,6 +286,7 @@ class PLYLoader extends Loader {
 			  uvs: [],
 			  faceVertexUvs: [],
 			  colors: [],
+			  faceVertexColors: []
 			};
 
 			for ( const customProperty of Object.keys( scope.customPropertyMapping ) ) {
@@ -413,10 +413,12 @@ class PLYLoader extends Loader {
 
 			}
 
-			if ( buffer.faceVertexUvs.length > 0 ) {
+			if ( buffer.faceVertexUvs.length > 0 || buffer.faceVertexColors.length > 0 ) {
 
 				geometry = geometry.toNonIndexed();
-				geometry.setAttribute( 'uv', new Float32BufferAttribute( buffer.faceVertexUvs, 2 ) );
+
+				if ( buffer.faceVertexUvs.length > 0 ) geometry.setAttribute( 'uv', new Float32BufferAttribute( buffer.faceVertexUvs, 2 ) );
+				if ( buffer.faceVertexColors.length > 0 ) geometry.setAttribute( 'color', new Float32BufferAttribute( buffer.faceVertexColors, 3 ) );
 
 			}
 
@@ -467,8 +469,9 @@ class PLYLoader extends Loader {
 					_color.setRGB(
 						element[ cacheEntry.attrR ] / 255.0,
 						element[ cacheEntry.attrG ] / 255.0,
-						element[ cacheEntry.attrB ] / 255.0
-					).convertSRGBToLinear();
+						element[ cacheEntry.attrB ] / 255.0,
+						SRGBColorSpace
+					);
 
 					buffer.colors.push( _color.r, _color.g, _color.b );
 
@@ -505,6 +508,22 @@ class PLYLoader extends Loader {
 
 					buffer.indices.push( vertex_indices[ 0 ], vertex_indices[ 1 ], vertex_indices[ 3 ] );
 					buffer.indices.push( vertex_indices[ 1 ], vertex_indices[ 2 ], vertex_indices[ 3 ] );
+
+				}
+
+				// face colors
+
+				if ( cacheEntry.attrR !== null && cacheEntry.attrG !== null && cacheEntry.attrB !== null ) {
+
+					_color.setRGB(
+						element[ cacheEntry.attrR ] / 255.0,
+						element[ cacheEntry.attrG ] / 255.0,
+						element[ cacheEntry.attrB ] / 255.0,
+						SRGBColorSpace
+					);
+					buffer.faceVertexColors.push( _color.r, _color.g, _color.b );
+					buffer.faceVertexColors.push( _color.r, _color.g, _color.b );
+					buffer.faceVertexColors.push( _color.r, _color.g, _color.b );
 
 				}
 
@@ -557,7 +576,7 @@ class PLYLoader extends Loader {
 
 				switch ( type ) {
 
-					// corespondences for non-specific length types here match rply:
+					// correspondences for non-specific length types here match rply:
 					case 'int8':	case 'char':	return { read: ( at ) => {
 
 						return dataview.getInt8( at );
@@ -662,6 +681,9 @@ class PLYLoader extends Loader {
 			let line = '';
 			const lines = [];
 
+			const startLine = new TextDecoder().decode( bytes.subarray( 0, 5 ) );
+			const hasCRNL = /^ply\r\n/.test( startLine );
+
 			do {
 
 				const c = String.fromCharCode( bytes[ i ++ ] );
@@ -684,7 +706,10 @@ class PLYLoader extends Loader {
 
 			} while ( cont && i < bytes.length );
 
-			return lines.join( '\r' ) + '\r';
+			// ascii section using \r\n as line endings
+			if ( hasCRNL === true ) i ++;
+
+			return { headerText: lines.join( '\r' ) + '\r', headerLength: i };
 
 		}
 
@@ -696,8 +721,8 @@ class PLYLoader extends Loader {
 		if ( data instanceof ArrayBuffer ) {
 
 			const bytes = new Uint8Array( data );
-			const headerText = extractHeaderText( bytes );
-			const header = parseHeader( headerText );
+			const { headerText, headerLength } = extractHeaderText( bytes );
+			const header = parseHeader( headerText, headerLength );
 
 			if ( header.format === 'ascii' ) {
 

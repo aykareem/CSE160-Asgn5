@@ -7,18 +7,20 @@ import { VolumeSlice } from '../misc/VolumeSlice.js';
 
 /**
  * This class had been written to handle the output of the NRRD loader.
- * It contains a volume of data and informations about it.
+ * It contains a volume of data and information about it.
  * For now it only handles 3 dimensional data.
  * See the webgl_loader_nrrd.html example and the loaderNRRD.js file to see how to use this class.
  * @class
- * @param   {number}        xLength         Width of the volume
- * @param   {number}        yLength         Length of the volume
- * @param   {number}        zLength         Depth of the volume
- * @param   {string}        type            The type of data (uint8, uint16, ...)
- * @param   {ArrayBuffer}   arrayBuffer     The buffer with volume data
  */
 class Volume {
 
+	/**
+	 * @param   {number}        xLength         Width of the volume
+	 * @param   {number}        yLength         Length of the volume
+	 * @param   {number}        zLength         Depth of the volume
+	 * @param   {string}        type            The type of data (uint8, uint16, ...)
+	 * @param   {ArrayBuffer}   arrayBuffer     The buffer with volume data
+	 */
 	constructor( xLength, yLength, zLength, type, arrayBuffer ) {
 
 		if ( xLength !== undefined ) {
@@ -209,7 +211,8 @@ class Volume {
 	}
 
 	/**
-	 * @member {Function} getData Shortcut for data[access(i,j,k)]
+	 * Shortcut for data[access(i,j,k)]
+	 *
 	 * @memberof Volume
 	 * @param {number} i    First coordinate
 	 * @param {number} j    Second coordinate
@@ -223,7 +226,8 @@ class Volume {
 	}
 
 	/**
-	 * @member {Function} access compute the index in the data array corresponding to the given coordinates in IJK system
+	 * Compute the index in the data array corresponding to the given coordinates in IJK system
+	 *
 	 * @memberof Volume
 	 * @param {number} i    First coordinate
 	 * @param {number} j    Second coordinate
@@ -237,7 +241,8 @@ class Volume {
 	}
 
 	/**
-	 * @member {Function} reverseAccess Retrieve the IJK coordinates of the voxel corresponding of the given index in the data
+	 * Retrieve the IJK coordinates of the voxel corresponding of the given index in the data
+	 *
 	 * @memberof Volume
 	 * @param {number} index index of the voxel
 	 * @returns {Array}  [x,y,z]
@@ -252,7 +257,8 @@ class Volume {
 	}
 
 	/**
-	 * @member {Function} map Apply a function to all the voxels, be careful, the value will be replaced
+	 * Apply a function to all the voxels, be careful, the value will be replaced
+	 *
 	 * @memberof Volume
 	 * @param {Function} functionToMap A function to apply to every voxel, will be called with the following parameters :
 	 *                                 value of the voxel
@@ -277,11 +283,12 @@ class Volume {
 	}
 
 	/**
-	 * @member {Function} extractPerpendicularPlane Compute the orientation of the slice and returns all the information relative to the geometry such as sliceAccess, the plane matrix (orientation and position in RAS coordinate) and the dimensions of the plane in both coordinate system.
+	 * Compute the orientation of the slice and returns all the information relative to the geometry such as sliceAccess, the plane matrix (orientation and position in RAS coordinate) and the dimensions of the plane in both coordinate system.
+	 *
 	 * @memberof Volume
 	 * @param {string}            axis  the normal axis to the slice 'x' 'y' or 'z'
-	 * @param {number}            index the index of the slice
-	 * @returns {Object} an object containing all the usefull information on the geometry of the slice
+	 * @param {number}            RASIndex the index of the slice
+	 * @returns {Object} an object containing all the useful information on the geometry of the slice
 	 */
 	extractPerpendicularPlane( axis, RASIndex ) {
 
@@ -340,20 +347,18 @@ class Volume {
 
 		}
 
-
-		let iLength, jLength;
-
-		if( ! this.segmentation ) {
+		if ( ! this.segmentation ) {
 
 			firstDirection.applyMatrix4( volume.inverseMatrix ).normalize();
 			secondDirection.applyMatrix4( volume.inverseMatrix ).normalize();
 			axisInIJK.applyMatrix4( volume.inverseMatrix ).normalize();
 
 		}
+
 		firstDirection.arglet = 'i';
 		secondDirection.arglet = 'j';
-		iLength = Math.floor( Math.abs( firstDirection.dot( dimensions ) ) );
-		jLength = Math.floor( Math.abs( secondDirection.dot( dimensions ) ) );
+		const iLength = Math.floor( Math.abs( firstDirection.dot( dimensions ) ) );
+		const jLength = Math.floor( Math.abs( secondDirection.dot( dimensions ) ) );
 		const planeWidth = Math.abs( iLength * firstSpacing );
 		const planeHeight = Math.abs( jLength * secondSpacing );
 
@@ -403,8 +408,9 @@ class Volume {
 	}
 
 	/**
-	 * @member {Function} extractSlice Returns a slice corresponding to the given axis and index
-	 *                        The coordinate are given in the Right Anterior Superior coordinate format
+	 * Returns a slice corresponding to the given axis and index.
+	 * The coordinate are given in the Right Anterior Superior coordinate format.
+	 *
 	 * @memberof Volume
 	 * @param {string}            axis  the normal axis to the slice 'x' 'y' or 'z'
 	 * @param {number}            index the index of the slice
@@ -419,8 +425,9 @@ class Volume {
 	}
 
 	/**
-	 * @member {Function} repaintAllSlices Call repaint on all the slices extracted from this volume
-	 * @see VolumeSlice.repaint
+	 * Call repaint on all the slices extracted from this volume
+	 *
+	 * @see {@link VolumeSlice#repaint}
 	 * @memberof Volume
 	 * @returns {Volume} this
 	 */
@@ -437,7 +444,8 @@ class Volume {
 	}
 
 	/**
-	 * @member {Function} computeMinMax Compute the minimum and the maximum of the data in the volume
+	 * Compute the minimum and the maximum of the data in the volume
+	 *
 	 * @memberof Volume
 	 * @returns {Array} [min,max]
 	 */
